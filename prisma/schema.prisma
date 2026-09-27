@@ -1,0 +1,35 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// One probe of one target. Pruned after RETENTION_DAYS.
+model Check {
+  id         BigInt   @id @default(autoincrement())
+  target     String
+  ok         Boolean
+  statusCode Int?
+  latencyMs  Int
+  /// Pulse's own short label ("timeout", "HTTP 503", "down: mongo"), never a raw response body.
+  error      String?
+  checkedAt  DateTime @default(now())
+
+  @@index([target, checkedAt])
+  @@index([checkedAt])
+}
+
+/// Opened after FAILURE_THRESHOLD consecutive failed checks, closed on the first success.
+model Incident {
+  id       Int       @id @default(autoincrement())
+  target   String
+  openedAt DateTime  @default(now())
+  closedAt DateTime?
+  cause    String?
+
+  @@index([target, closedAt])
+  @@index([openedAt])
+}

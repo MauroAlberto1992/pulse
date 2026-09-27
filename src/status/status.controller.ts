@@ -16,6 +16,7 @@ import { comingSoonPage, statusPage, TargetStatus } from './views';
 const DAY_MS = 86_400_000;
 // Read once at startup; Railway runs from the repo root, where public/ lives.
 const FAVICON = readFileSync(join(process.cwd(), 'public', 'favicon.png'));
+const FILTERS_JS = readFileSync(join(process.cwd(), 'public', 'filters.js'));
 
 @Controller()
 export class StatusController {
@@ -36,6 +37,13 @@ export class StatusController {
   @Header('Cache-Control', 'public, max-age=86400')
   favicon(): StreamableFile {
     return new StreamableFile(FAVICON);
+  }
+
+  @Get('filters.js')
+  @Header('Content-Type', 'text/javascript; charset=utf-8')
+  @Header('Cache-Control', 'public, max-age=3600')
+  filtersScript(): StreamableFile {
+    return new StreamableFile(FILTERS_JS);
   }
 
   @Get()

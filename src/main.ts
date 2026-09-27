@@ -20,6 +20,7 @@ async function bootstrap(): Promise<void> {
           defaultSrc: ["'none'"],
           styleSrc: ["'unsafe-inline'"],
           imgSrc: ["'self'"],
+          scriptSrc: ["'self'"],
           formAction: ["'self'"],
           frameAncestors: ["'none'"],
           baseUri: ["'none'"],

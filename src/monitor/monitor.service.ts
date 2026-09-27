@@ -27,6 +27,22 @@ export class MonitorService implements OnApplicationBootstrap, OnModuleDestroy {
 
   async onApplicationBootstrap(): Promise<void> {
     // Rebuild state from the database, so a restart neither re-alerts an open incident nor loses it.
+    // A target removed from PULSE_TARGETS is never checked again, so its open incident would
+    // stay open forever. Close it (no email: nothing recovered, it's just no longer watched).
+    const names = this.config.targets.map(target => target.name);
+    const { count: orphaned } = await this.prisma.incident.updateMany({
+      where: { closedAt: null, target: { notIn: names } },
+      data: {
+        closedAt: new Date(),
+        cause: 'target removed from PULSE_TARGETS',
+      },
+    });
+    if (orphaned !== 0) {
+      this.logger.log(
+        `Closed ${orphaned} incidents of targets no longer monitored`,
+      );
+    }
+
     const open = await this.prisma.incident.findMany({
       where: { closedAt: null },
     });

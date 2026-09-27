@@ -80,6 +80,9 @@ input { font:inherit; padding:9px 10px; border-radius:6px; border:1px solid var(
 .error { color:var(--down); }
 form.filters { display:flex; flex-wrap:wrap; gap:8px; margin:16px 0; }
 form.filters input[type=search] { flex:1 1 220px; }
+a.clear { display:inline-flex; align-items:center; padding:8px 14px; border-radius:6px;
+  border:1px solid var(--line); background:var(--panel); color:var(--text); text-decoration:none; }
+a.clear:hover { border-color:var(--muted); }
 select { font:inherit; padding:8px; border-radius:6px; border:1px solid var(--line);
   background:var(--panel); color:var(--text); }
 td.msg { white-space:normal; word-break:break-word; min-width:280px; }
@@ -247,12 +250,12 @@ export function logsPage(
     `<select name="${name}">${option('', all, selected)}${values.map(v => option(v, v, selected)).join('')}</select>`;
 
   const form = `<form class="filters" method="get" action="/logs">
-<input type="search" name="q" placeholder="Search message or module" value="${escapeHtml(filters.text ?? '')}">
+<input type="search" name="q" placeholder="Search message or module (Enter)" value="${escapeHtml(filters.text ?? '')}">
 ${select('level', 'All levels', ['error', 'warn'], filters.level)}
 ${select('service', 'All services', sources.services, filters.service)}
 ${select('environment', 'All environments', sources.environments, filters.environment)}
 <select name="range">${['5m', '15m', '30m', '1h', '24h', '7d', '30d'].map(r => option(r, `Last ${r}`, filters.range)).join('')}</select>
-<button type="submit">Filter</button></form>
+<a class="clear" href="/logs">Clear</a></form>
 <script src="/filters.js" defer></script>`;
 
   const body =

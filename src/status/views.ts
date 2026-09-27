@@ -70,6 +70,11 @@ tr:last-child td { border-bottom:0; }
 button { font:inherit; padding:8px 14px; border-radius:6px; border:1px solid var(--line);
   background:var(--panel); color:var(--text); cursor:pointer; }
 form.login { max-width:320px; margin:15vh auto 0; display:grid; gap:12px; }
+.password { position:relative; display:grid; }
+.password input { padding-right:44px; }
+.reveal { position:absolute; right:4px; top:50%; transform:translateY(-50%); padding:6px 8px;
+  border:0; background:transparent; color:var(--muted); line-height:0; }
+.reveal:hover, .reveal:focus-visible { color:var(--text); }
 input { font:inherit; padding:9px 10px; border-radius:6px; border:1px solid var(--line);
   background:var(--panel); color:var(--text); }
 .error { color:var(--down); }
@@ -109,6 +114,12 @@ function shell(
 ${body}`;
 }
 
+// Stroke icons (feather style) so they follow the text colour in light and dark mode.
+const EYE_ON =
+  '<svg class="eye-on" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+const EYE_OFF =
+  '<svg class="eye-off" style="display:none" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+
 export function loginPage(options: { totp: boolean; error?: string }): string {
   const error =
     options.error === undefined
@@ -121,8 +132,12 @@ export function loginPage(options: { totp: boolean; error?: string }): string {
     'Pulse login',
     `<form class="login" method="post" action="/login">
 <h1>Pulse</h1>${error}
+<div class="password">
 <input name="password" type="password" autocomplete="current-password" placeholder="Password" required autofocus>
-${code}<button type="submit">Log in</button></form>`,
+<button type="button" class="reveal" aria-label="Show password" aria-pressed="false" hidden>${EYE_ON}${EYE_OFF}</button>
+</div>
+${code}<button type="submit">Log in</button></form>
+<script src="/login.js" defer></script>`,
   );
 }
 

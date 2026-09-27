@@ -17,6 +17,7 @@ const DAY_MS = 86_400_000;
 // Read once at startup; Railway runs from the repo root, where public/ lives.
 const FAVICON = readFileSync(join(process.cwd(), 'public', 'favicon.png'));
 const FILTERS_JS = readFileSync(join(process.cwd(), 'public', 'filters.js'));
+const LOGIN_JS = readFileSync(join(process.cwd(), 'public', 'login.js'));
 
 @Controller()
 export class StatusController {
@@ -37,6 +38,14 @@ export class StatusController {
   @Header('Cache-Control', 'public, max-age=86400')
   favicon(): StreamableFile {
     return new StreamableFile(FAVICON);
+  }
+
+  /** Public: the login page needs it before there's a session. */
+  @Get('login.js')
+  @Header('Content-Type', 'text/javascript; charset=utf-8')
+  @Header('Cache-Control', 'public, max-age=3600')
+  loginScript(): StreamableFile {
+    return new StreamableFile(LOGIN_JS);
   }
 
   @Get('filters.js')

@@ -1,10 +1,21 @@
-import { Controller, Get, Header, Inject, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Header,
+  Inject,
+  StreamableFile,
+  UseGuards,
+} from '@nestjs/common';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { AuthGuard } from '../auth/auth.guard';
 import { CONFIG, Config } from '../config';
 import { PrismaService } from '../prisma.service';
 import { comingSoonPage, statusPage, TargetStatus } from './views';
 
 const DAY_MS = 86_400_000;
+// Read once at startup; Railway runs from the repo root, where public/ lives.
+const FAVICON = readFileSync(join(process.cwd(), 'public', 'favicon.png'));
 
 @Controller()
 export class StatusController {
@@ -17,6 +28,14 @@ export class StatusController {
   @Get('healthz')
   healthz(): { status: 'ok' } {
     return { status: 'ok' };
+  }
+
+  /** Public, so the login page gets its tab icon too. */
+  @Get('favicon.png')
+  @Header('Content-Type', 'image/png')
+  @Header('Cache-Control', 'public, max-age=86400')
+  favicon(): StreamableFile {
+    return new StreamableFile(FAVICON);
   }
 
   @Get()

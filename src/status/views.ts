@@ -82,6 +82,7 @@ function layout(title: string, body: string, refreshSeconds?: number): string {
       : `<meta http-equiv="refresh" content="${refreshSeconds}">`;
   return `<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">${refresh}
+<link rel="icon" type="image/png" href="/favicon.png">
 <title>${escapeHtml(title)}</title><style>${STYLE}</style></head>
 <body><main>${body}</main></body></html>`;
 }

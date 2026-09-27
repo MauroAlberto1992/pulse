@@ -17,6 +17,7 @@ async function bootstrap(): Promise<void> {
         directives: {
           defaultSrc: ["'none'"],
           styleSrc: ["'unsafe-inline'"],
+          imgSrc: ["'self'"],
           formAction: ["'self'"],
           frameAncestors: ["'none'"],
           baseUri: ["'none'"],

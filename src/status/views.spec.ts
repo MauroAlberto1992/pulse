@@ -67,3 +67,24 @@ describe('logsPage', () => {
     expect(html).toContain('level=error');
   });
 });
+
+describe('logsPage ranges', () => {
+  it('offers the short ranges and keeps the chosen one selected', () => {
+    const html = logsPage(
+      {
+        range: '15m',
+        level: null,
+        service: null,
+        environment: null,
+        text: null,
+      },
+      [],
+      null,
+      { services: [], environments: [] },
+    );
+    for (const range of ['5m', '15m', '30m', '1h', '24h', '7d', '30d']) {
+      expect(html).toContain(`value="${range}"`);
+    }
+    expect(html).toContain('value="15m" selected');
+  });
+});

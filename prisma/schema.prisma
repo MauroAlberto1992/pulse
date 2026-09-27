@@ -33,3 +33,23 @@ model Incident {
   @@index([target, closedAt])
   @@index([openedAt])
 }
+
+/// A warn/error line shipped by an app (redacted at the source and again on ingest).
+/// Pruned after LOG_RETENTION_DAYS.
+model LogEntry {
+  id          BigInt   @id @default(autoincrement())
+  /// When the app logged it (from the payload).
+  timestamp   DateTime
+  receivedAt  DateTime @default(now())
+  /// "api" or "web".
+  service     String
+  /// The app's environment, e.g. "production" or "staging".
+  environment String
+  level       String
+  context     String?
+  message     String
+  stack       String?
+
+  @@index([timestamp])
+  @@index([service, level, timestamp])
+}

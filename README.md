@@ -1,7 +1,7 @@
 # Pulse
 
 Uptime monitoring and alerting for Espion, served at `pulse.espion.pt`. Single user.
-Plan: `api_cp/docs/PULSE_OBSERVABILITY_PLAN.md`. This repo is **Phase 1** (uptime + alerts).
+Plan: `api_cp/docs/PULSE_OBSERVABILITY_PLAN.md`. Phase 1 (uptime + alerts) and Phase 2 (logs).
 
 ## What it does
 
@@ -13,8 +13,11 @@ Plan: `api_cp/docs/PULSE_OBSERVABILITY_PLAN.md`. This repo is **Phase 1** (uptim
 - After each round it pings `HEARTBEAT_URL`, an external dead-man's switch that emails you if pulse
   (or Railway) stops.
 - Check history is pruned nightly after `RETENTION_DAYS` (default 30).
-- Dashboard: server-rendered Status page (auto-refreshes every minute), plus empty Logs / Infra /
-  Business placeholders for later phases.
+- Logs: `api_cp` and the web's Next server send their warn/error lines to `POST /ingest/logs`
+  (Bearer `LOG_INGEST_SECRET`), already redacted (emails, phones, NIF/SNS numbers, IBANs, tokens);
+  pulse redacts again on arrival. Capped at 5000 lines/minute; kept `LOG_RETENTION_DAYS` (30).
+  The Logs page filters by level, service, environment, text and time range.
+- Dashboard: server-rendered Status and Logs pages, plus empty Infra / Business placeholders.
 - Login: its own password (+ optional TOTP), no dependency on `api_cp`. Five failed attempts lock
   the login for 15 minutes. Sessions last 7 days; rotate `SESSION_SECRET` to revoke them.
 

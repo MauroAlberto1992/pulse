@@ -21,6 +21,9 @@ export interface Config {
   alertFrom: string | null;
   alertTo: string | null;
   heartbeatUrl: string | null;
+  /** Bearer secret the apps' log shippers send; null disables /ingest/logs. */
+  logIngestSecret: string | null;
+  logRetentionDays: number;
 }
 
 /** Validates the environment once at startup; throws naming every problem (never the values). */
@@ -66,6 +69,11 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     );
   }
 
+  const logIngestSecret = optional('LOG_INGEST_SECRET');
+  if (logIngestSecret !== null && logIngestSecret.length < 32) {
+    problems.push('LOG_INGEST_SECRET must be at least 32 characters');
+  }
+
   const alertFrom = optional('ALERT_EMAIL_FROM');
   const alertTo = optional('ALERT_EMAIL_TO');
   const brevoApiKey = optional('BREVO_API_KEY');
@@ -92,6 +100,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     alertFrom,
     alertTo,
     heartbeatUrl: optional('HEARTBEAT_URL'),
+    logIngestSecret,
+    logRetentionDays: positiveInt('LOG_RETENTION_DAYS', 30),
   };
 
   if (problems.length !== 0) {

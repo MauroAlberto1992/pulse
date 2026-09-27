@@ -9,6 +9,8 @@ import { CONFIG, Config } from './config';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  // A full log batch (100 entries with stacks) is well over Express's 100 KB default.
+  app.useBodyParser('json', { limit: '2mb' });
   const config = app.get<Config>(CONFIG);
 
   app.use(

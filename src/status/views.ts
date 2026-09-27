@@ -73,6 +73,16 @@ form.login { max-width:320px; margin:15vh auto 0; display:grid; gap:12px; }
 input { font:inherit; padding:9px 10px; border-radius:6px; border:1px solid var(--line);
   background:var(--panel); color:var(--text); }
 .error { color:var(--down); }
+form.filters { display:flex; flex-wrap:wrap; gap:8px; margin:16px 0; }
+form.filters input[type=search] { flex:1 1 220px; }
+select { font:inherit; padding:8px; border-radius:6px; border:1px solid var(--line);
+  background:var(--panel); color:var(--text); }
+td.msg { white-space:normal; word-break:break-word; min-width:280px; }
+td.msg summary { cursor:pointer; list-style:none; }
+td.msg pre { white-space:pre-wrap; font-size:12px; color:var(--muted); margin:8px 0 0; }
+.warn { color:var(--unknown); }
+.pager { margin-top:12px; }
+.pager a, p.muted a { color:var(--text); }
 `;
 
 function layout(title: string, body: string, refreshSeconds?: number): string {
@@ -171,7 +181,7 @@ ${incidentRows}</table></div>`,
 }
 
 export function comingSoonPage(
-  active: 'logs' | 'infra' | 'business',
+  active: 'infra' | 'business',
   title: string,
   phase: string,
 ): string {
@@ -180,6 +190,106 @@ export function comingSoonPage(
     shell(
       active,
       `<h2>${escapeHtml(title)}</h2><p class="muted">Coming soon (${escapeHtml(phase)}).</p>`,
+    ),
+  );
+}
+
+export interface LogRow {
+  id: bigint;
+  timestamp: Date;
+  service: string;
+  environment: string;
+  level: string;
+  context: string | null;
+  message: string;
+  stack: string | null;
+}
+
+export interface LogFilters {
+  range: string;
+  level: string | null;
+  service: string | null;
+  environment: string | null;
+  text: string | null;
+}
+
+function option(value: string, label: string, selected: string | null): string {
+  return `<option value="${escapeHtml(value)}"${value === (selected ?? '') ? ' selected' : ''}>${escapeHtml(label)}</option>`;
+}
+
+export function logsPage(
+  filters: LogFilters,
+  rows: LogRow[],
+  nextBefore: bigint | null,
+  sources: { services: string[]; environments: string[] },
+): string {
+  const select = (
+    name: string,
+    all: string,
+    values: string[],
+    selected: string | null,
+  ) =>
+    `<select name="${name}">${option('', all, selected)}${values.map(v => option(v, v, selected)).join('')}</select>`;
+
+  const form = `<form class="filters" method="get" action="/logs">
+<input type="search" name="q" placeholder="Search message or module" value="${escapeHtml(filters.text ?? '')}">
+${select('level', 'All levels', ['error', 'warn'], filters.level)}
+${select('service', 'All services', sources.services, filters.service)}
+${select('environment', 'All environments', sources.environments, filters.environment)}
+<select name="range">${['1h', '24h', '7d', '30d'].map(r => option(r, `Last ${r}`, filters.range)).join('')}</select>
+<button type="submit">Filter</button></form>`;
+
+  const body =
+    rows.length === 0
+      ? '<tr><td colspan="4" class="muted">No logs match these filters.</td></tr>'
+      : rows
+          .map(row => {
+            const short =
+              row.message.length > 240
+                ? `${row.message.slice(0, 240)}…`
+                : row.message;
+            const expandable = row.message.length > 240 || row.stack !== null;
+            const message = expandable
+              ? `<details><summary>${escapeHtml(short)}</summary><pre>${escapeHtml(row.message)}${row.stack === null ? '' : `\n\n${escapeHtml(row.stack)}`}</pre></details>`
+              : escapeHtml(row.message);
+            return `<tr><td>${formatDate(row.timestamp)}</td>
+<td>${escapeHtml(row.service)}<br><span class="muted">${escapeHtml(row.environment)}</span></td>
+<td class="state ${row.level === 'error' ? 'down' : 'warn'}">${escapeHtml(row.level.toUpperCase())}<br><span class="muted">${escapeHtml(row.context ?? '')}</span></td>
+<td class="msg">${message}</td></tr>`;
+          })
+          .join('');
+
+  let pager = '';
+  if (nextBefore !== null) {
+    const params = new URLSearchParams();
+    if (filters.text !== null) params.set('q', filters.text);
+    if (filters.level !== null) params.set('level', filters.level);
+    if (filters.service !== null) params.set('service', filters.service);
+    if (filters.environment !== null)
+      params.set('environment', filters.environment);
+    params.set('range', filters.range);
+    params.set('before', nextBefore.toString());
+    pager = `<p class="pager"><a href="/logs?${escapeHtml(params.toString())}">Older →</a></p>`;
+  }
+
+  const download = new URLSearchParams();
+  if (filters.text !== null) download.set('q', filters.text);
+  if (filters.level !== null) download.set('level', filters.level);
+  if (filters.service !== null) download.set('service', filters.service);
+  if (filters.environment !== null)
+    download.set('environment', filters.environment);
+  download.set('range', filters.range);
+  const downloadLinks = `<p class="muted">Download everything these filters match in the last ${escapeHtml(filters.range)}:
+<a href="/logs/download?${escapeHtml(download.toString())}&amp;format=csv">CSV</a> ·
+<a href="/logs/download?${escapeHtml(download.toString())}&amp;format=json">JSON (NDJSON)</a></p>`;
+
+  return layout(
+    'Pulse logs',
+    shell(
+      'logs',
+      `<h2>Logs</h2>${form}${downloadLinks}<div class="panel"><table>
+<tr><th>Time</th><th>Service</th><th>Level</th><th>Message</th></tr>
+${body}</table></div>${pager}`,
     ),
   );
 }

@@ -88,13 +88,6 @@ export class StatusController {
     return statusPage(targets, incidents, now);
   }
 
-  @Get('logs')
-  @UseGuards(AuthGuard)
-  @Header('Content-Type', 'text/html; charset=utf-8')
-  logs(): string {
-    return comingSoonPage('logs', 'Logs', 'phase 2');
-  }
-
   @Get('infra')
   @UseGuards(AuthGuard)
   @Header('Content-Type', 'text/html; charset=utf-8')

@@ -1,6 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { Prisma } from '@prisma/client';
+import { LogEntry, Prisma } from '@prisma/client';
 import { CONFIG, Config } from '../config';
 import { PrismaService } from '../prisma.service';
 import { IngestEntry } from './ingest';
@@ -13,6 +13,8 @@ export const LOG_RANGES = {
 } as const;
 export type LogRange = keyof typeof LOG_RANGES;
 export const PAGE_SIZE = 100;
+export const EXPORT_LIMIT = 100_000;
+const EXPORT_CHUNK = 2000;
 
 export interface LogQuery {
   range: LogRange;
@@ -39,7 +41,7 @@ export class LogsService {
     }
   }
 
-  async search(query: LogQuery, now = new Date()) {
+  private where(query: LogQuery, now: Date): Prisma.LogEntryWhereInput {
     const where: Prisma.LogEntryWhereInput = {
       timestamp: { gte: new Date(now.getTime() - LOG_RANGES[query.range]) },
     };
@@ -53,8 +55,12 @@ export class LogsService {
         { context: { contains: query.text, mode: 'insensitive' } },
       ];
     }
+    return where;
+  }
+
+  async search(query: LogQuery, now = new Date()) {
     const rows = await this.prisma.logEntry.findMany({
-      where,
+      where: this.where(query, now),
       orderBy: { id: 'desc' },
       take: PAGE_SIZE + 1,
     });
@@ -62,6 +68,37 @@ export class LogsService {
       rows: rows.slice(0, PAGE_SIZE),
       nextBefore: rows.length > PAGE_SIZE ? rows[PAGE_SIZE - 1].id : null,
     };
+  }
+
+  /** How many rows match the filters (ignoring the page). */
+  count(query: LogQuery, now = new Date()): Promise<number> {
+    return this.prisma.logEntry.count({
+      where: this.where({ ...query, before: null }, now),
+    });
+  }
+
+  /**
+   * Rows matching the filters (ignoring the page), newest first, in chunks so a 30-day export
+   * never sits in memory at once. At most EXPORT_LIMIT rows.
+   */
+  async *export(query: LogQuery, now = new Date()): AsyncGenerator<LogEntry[]> {
+    const where = this.where({ ...query, before: null }, now);
+    let cursor: bigint | null = null;
+    let sent = 0;
+    while (sent < EXPORT_LIMIT) {
+      const rows: LogEntry[] = await this.prisma.logEntry.findMany({
+        where:
+          cursor === null ? where : { AND: [where, { id: { lt: cursor } }] },
+        orderBy: { id: 'desc' },
+        take: Math.min(EXPORT_CHUNK, EXPORT_LIMIT - sent),
+      });
+      if (rows.length === 0) {
+        return;
+      }
+      yield rows;
+      sent += rows.length;
+      cursor = rows[rows.length - 1].id;
+    }
   }
 
   /** Services and environments seen recently, for the filter dropdowns. */

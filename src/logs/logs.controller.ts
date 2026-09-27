@@ -11,16 +11,31 @@ import {
   NotFoundException,
   Post,
   Query,
+  Res,
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { createHash, timingSafeEqual } from 'crypto';
+import { Response } from 'express';
 import { AuthGuard } from '../auth/auth.guard';
 import { CONFIG, Config } from '../config';
 import { logsPage } from '../status/views';
+import {
+  CSV_HEADER,
+  csvRow,
+  ExportFormat,
+  exportFilename,
+  jsonRow,
+} from './export-format';
 import { parseBatch } from './ingest';
 import { IngestLimiter } from './ingest-limiter';
-import { LOG_RANGES, LogQuery, LogRange, LogsService } from './logs.service';
+import {
+  EXPORT_LIMIT,
+  LOG_RANGES,
+  LogQuery,
+  LogRange,
+  LogsService,
+} from './logs.service';
 
 @Controller()
 export class LogsController {
@@ -68,6 +83,40 @@ export class LogsController {
       this.logs.sources(),
     ]);
     return logsPage(query, result.rows, result.nextBefore, sources);
+  }
+
+  /** Everything the current filters match over the whole range (not just the page), as a file. */
+  @Get('logs/download')
+  @UseGuards(AuthGuard)
+  async download(
+    @Query() raw: Record<string, string | undefined>,
+    @Res() res: Response,
+  ): Promise<void> {
+    const query = parseQuery(raw);
+    const format: ExportFormat = raw.format === 'json' ? 'json' : 'csv';
+    const now = new Date();
+    const total = await this.logs.count(query, now);
+
+    res.status(200);
+    res.type(
+      format === 'csv'
+        ? 'text/csv; charset=utf-8'
+        : 'application/x-ndjson; charset=utf-8',
+    );
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${exportFilename(query.range, format, now)}"`,
+    );
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('X-Pulse-Rows', String(Math.min(total, EXPORT_LIMIT)));
+    res.setHeader('X-Pulse-Truncated', String(total > EXPORT_LIMIT));
+
+    // Excel only reads CSV as UTF-8 with a BOM; without it, accents come out garbled.
+    res.write(format === 'csv' ? `\uFEFF${CSV_HEADER}` : '');
+    for await (const chunk of this.logs.export(query, now)) {
+      res.write(chunk.map(format === 'csv' ? csvRow : jsonRow).join(''));
+    }
+    res.end();
   }
 }
 

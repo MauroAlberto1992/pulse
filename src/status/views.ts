@@ -82,7 +82,7 @@ td.msg summary { cursor:pointer; list-style:none; }
 td.msg pre { white-space:pre-wrap; font-size:12px; color:var(--muted); margin:8px 0 0; }
 .warn { color:var(--unknown); }
 .pager { margin-top:12px; }
-.pager a { color:var(--text); }
+.pager a, p.muted a { color:var(--text); }
 `;
 
 function layout(title: string, body: string, refreshSeconds?: number): string {
@@ -272,11 +272,22 @@ ${select('environment', 'All environments', sources.environments, filters.enviro
     pager = `<p class="pager"><a href="/logs?${escapeHtml(params.toString())}">Older →</a></p>`;
   }
 
+  const download = new URLSearchParams();
+  if (filters.text !== null) download.set('q', filters.text);
+  if (filters.level !== null) download.set('level', filters.level);
+  if (filters.service !== null) download.set('service', filters.service);
+  if (filters.environment !== null)
+    download.set('environment', filters.environment);
+  download.set('range', filters.range);
+  const downloadLinks = `<p class="muted">Download everything these filters match in the last ${escapeHtml(filters.range)}:
+<a href="/logs/download?${escapeHtml(download.toString())}&amp;format=csv">CSV</a> ·
+<a href="/logs/download?${escapeHtml(download.toString())}&amp;format=json">JSON (NDJSON)</a></p>`;
+
   return layout(
     'Pulse logs',
     shell(
       'logs',
-      `<h2>Logs</h2>${form}<div class="panel"><table>
+      `<h2>Logs</h2>${form}${downloadLinks}<div class="panel"><table>
 <tr><th>Time</th><th>Service</th><th>Level</th><th>Message</th></tr>
 ${body}</table></div>${pager}`,
     ),

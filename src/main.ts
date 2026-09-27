@@ -1,3 +1,5 @@
+// Must stay first: loads .env before the config is read (a no-op on Railway, which sets real env vars).
+import 'dotenv/config';
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';

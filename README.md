@@ -41,3 +41,28 @@ npm test
    ping URL in `HEARTBEAT_URL`.
 5. Domain: add `pulse.espion.pt` as a custom domain on the service and create the CNAME Railway
    shows at Amen.
+
+## Forgot the password / lost the phone
+
+The password is never stored anywhere readable — only its hash, in `PULSE_PASSWORD_HASH` on
+Railway. It can't be recovered, only replaced. Keep it in a password manager (Apple Passwords,
+1Password, Bitwarden), never in this repo.
+
+**New password:**
+
+1. `npm run hash-password -- 'new-password'` (12+ characters; the quotes are not part of it).
+2. Railway → pulse project → pulse service → **Variables** → replace `PULSE_PASSWORD_HASH` with the
+   output, **without** quotes. Saving redeploys.
+3. Log in with the new password.
+
+**Lost the authenticator app / phone:**
+
+1. `npm run new-totp-secret`.
+2. Replace `PULSE_TOTP_SECRET` on Railway with the new secret (only the value after `secret=`).
+3. Add it to the authenticator app ("+" → enter setup key, time-based).
+
+**Locked out** ("Too many failed attempts"): five wrong tries lock the login for 15 minutes.
+Railway → pulse service → **Deployments** → **Restart** clears it immediately.
+
+Changing either variable doesn't log out an existing session; rotate `SESSION_SECRET` to force
+everyone out.

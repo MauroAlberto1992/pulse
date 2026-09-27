@@ -236,7 +236,7 @@ export function logsPage(
 ${select('level', 'All levels', ['error', 'warn'], filters.level)}
 ${select('service', 'All services', sources.services, filters.service)}
 ${select('environment', 'All environments', sources.environments, filters.environment)}
-<select name="range">${['1h', '24h', '7d', '30d'].map(r => option(r, `Last ${r}`, filters.range)).join('')}</select>
+<select name="range">${['5m', '15m', '30m', '1h', '24h', '7d', '30d'].map(r => option(r, `Last ${r}`, filters.range)).join('')}</select>
 <button type="submit">Filter</button></form>
 <script src="/filters.js" defer></script>`;
 

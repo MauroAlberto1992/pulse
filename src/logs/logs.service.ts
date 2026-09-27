@@ -6,6 +6,9 @@ import { PrismaService } from '../prisma.service';
 import { IngestEntry } from './ingest';
 
 export const LOG_RANGES = {
+  '5m': 5 * 60_000,
+  '15m': 15 * 60_000,
+  '30m': 30 * 60_000,
   '1h': 3_600_000,
   '24h': 86_400_000,
   '7d': 7 * 86_400_000,

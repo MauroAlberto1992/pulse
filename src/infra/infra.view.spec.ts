@@ -37,6 +37,18 @@ function service(overrides = {}) {
 }
 
 describe('lineChart', () => {
+  it('reports a max of 0 when every value is 0', () => {
+    const zeros = [
+      { ts: 0, value: 0 },
+      { ts: 60, value: 0 },
+    ];
+    const svg = lineChart(
+      [{ points: zeros, className: 'line-a', label: 'in' }],
+      v => `${v} GB`,
+    );
+    expect(svg).toContain('(max 0 GB)');
+  });
+
   it('draws a polyline per series and says when there is no data', () => {
     const svg = lineChart(
       [{ points, className: 'line-a', label: 'x' }],

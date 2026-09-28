@@ -19,9 +19,12 @@ export function lineChart(
   }
   const minTs = Math.min(...all.map(p => p.ts));
   const maxTs = Math.max(...all.map(p => p.ts));
-  const maxValue = Math.max(...all.map(p => p.value), 0) || 1;
+  const maxValue = Math.max(...all.map(p => p.value), 0);
+  // All zeros: draw a flat line at the bottom (scale of 1 avoids dividing by zero), but still
+  // report the real max, 0.
+  const scale = maxValue || 1;
   const x = (ts: number) => ((ts - minTs) / (maxTs - minTs || 1)) * WIDTH;
-  const y = (value: number) => HEIGHT - (value / maxValue) * (HEIGHT - 4) - 2;
+  const y = (value: number) => HEIGHT - (value / scale) * (HEIGHT - 4) - 2;
 
   const lines = series
     .filter(s => s.points.length > 1)

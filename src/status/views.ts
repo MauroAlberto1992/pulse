@@ -95,7 +95,7 @@ td.msg pre { white-space:pre-wrap; font-size:12px; color:var(--muted); margin:8p
 .ranges a.active { color:var(--text); font-weight:600; }
 h3.env { font-size:14px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); margin:20px 0 10px; }
 .cards { display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:12px; }
-.card { padding:14px 16px; overflow:hidden; }
+.card { padding:14px 16px; }
 .card h3 { font-size:15px; margin:0 0 4px; }
 .card h4 { font-size:12px; font-weight:500; color:var(--muted); margin:12px 0 4px; }
 .card .deploy { margin:0; font-size:13px; }
@@ -105,6 +105,23 @@ h3.env { font-size:14px; text-transform:uppercase; letter-spacing:.04em; color:v
 .chart-legend { font-size:12px; margin:2px 0 0; }
 .line-a-text { color:var(--up); } .line-b-text { color:var(--unknown); }
 .chart-empty { font-size:12px; margin:0; }
+.tip { position:relative; display:inline-block; cursor:help; color:var(--muted); font-weight:400;
+  font-size:13px; margin-left:4px; outline:none; }
+.tip-text { display:none; position:absolute; z-index:10; left:50%; transform:translateX(-50%); top:1.6em;
+  width:260px; padding:10px 12px; border-radius:6px; border:1px solid var(--line);
+  background:var(--panel); color:var(--text); font-size:12px; line-height:1.45; font-weight:400;
+  text-transform:none; letter-spacing:0; box-shadow:0 6px 20px rgba(0,0,0,.25); white-space:normal; }
+.tip:hover .tip-text, .tip:focus .tip-text, .tip:focus-within .tip-text { display:block; }
+.tip:focus-visible { color:var(--text); }
+.card { overflow:visible; }
+.card-warn { border-color:var(--unknown); } .card-problem { border-color:var(--down); }
+.summary { padding:12px 16px; margin:12px 0; }
+.summary-title { margin:0; font-weight:600; }
+.summary ul { margin:8px 0 0; padding-left:0; list-style:none; }
+.summary li { margin:4px 0; font-size:14px; }
+.summary-warn { border-color:var(--unknown); } .summary-problem { border-color:var(--down); }
+.rules { margin:0 0 8px; } .rules summary { cursor:pointer; color:var(--muted); font-size:13px; }
+.rules .panel { margin-top:8px; }
 `;
 
 function layout(title: string, body: string, refreshSeconds?: number): string {

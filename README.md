@@ -1,7 +1,8 @@
 # Pulse
 
 Uptime monitoring and alerting for Espion, served at `pulse.espion.pt`. Single user.
-Plan: `api_cp/docs/PULSE_OBSERVABILITY_PLAN.md`. Phase 1 (uptime + alerts) and Phase 2 (logs).
+Plan: `api_cp/docs/PULSE_OBSERVABILITY_PLAN.md`. Phase 1 (uptime + alerts), Phase 2 (logs) and
+Phase 3 (infra).
 
 ## What it does
 
@@ -17,7 +18,14 @@ Plan: `api_cp/docs/PULSE_OBSERVABILITY_PLAN.md`. Phase 1 (uptime + alerts) and P
   (Bearer `LOG_INGEST_SECRET`), already redacted (emails, phones, NIF/SNS numbers, IBANs, tokens);
   pulse redacts again on arrival. Capped at 5000 lines/minute; kept `LOG_RETENTION_DAYS` (30).
   The Logs page filters by level, service, environment, text and time range.
-- Dashboard: server-rendered Status and Logs pages, plus empty Infra / Business placeholders.
+- Infra: CPU, memory and network over time for every Railway service (both projects, all
+  environments) with each one's latest deploy, plus the web's latest Vercel deployments. Read
+  live from the Railway and Vercel APIs (`RAILWAY_API_TOKEN`, `VERCEL_TOKEN`), cached for 2
+  minutes, nothing stored.
+  - ⛔ **Read-only, always.** These tokens have full access, so every call goes through
+    `src/infra/readonly-clients.ts`, which refuses GraphQL mutations and anything but GET on an
+    allow-list, with tests. Never use them to delete or change anything on Railway or Vercel.
+- Dashboard: server-rendered Status, Logs and Infra pages, plus an empty Business placeholder.
 - Login: its own password (+ optional TOTP), no dependency on `api_cp`. Five failed attempts lock
   the login for 15 minutes. Sessions last 7 days; rotate `SESSION_SECRET` to revoke them.
 

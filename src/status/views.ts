@@ -34,7 +34,7 @@ const lisbon = new Intl.DateTimeFormat('en-GB', {
   timeStyle: 'medium',
 });
 
-function formatDate(date: Date | null): string {
+export function formatDate(date: Date | null): string {
   return date === null ? '—' : lisbon.format(date);
 }
 
@@ -91,6 +91,20 @@ td.msg pre { white-space:pre-wrap; font-size:12px; color:var(--muted); margin:8p
 .warn { color:var(--unknown); }
 .pager { margin-top:12px; }
 .pager a, p.muted a { color:var(--text); }
+.ranges a { color:var(--muted); margin-right:12px; text-decoration:none; }
+.ranges a.active { color:var(--text); font-weight:600; }
+h3.env { font-size:14px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); margin:20px 0 10px; }
+.cards { display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:12px; }
+.card { padding:14px 16px; overflow:hidden; }
+.card h3 { font-size:15px; margin:0 0 4px; }
+.card h4 { font-size:12px; font-weight:500; color:var(--muted); margin:12px 0 4px; }
+.card .deploy { margin:0; font-size:13px; }
+.card .commit { font-size:12px; }
+.chart { width:100%; height:56px; display:block; }
+.chart .line-a { stroke:var(--up); } .chart .line-b { stroke:var(--unknown); }
+.chart-legend { font-size:12px; margin:2px 0 0; }
+.line-a-text { color:var(--up); } .line-b-text { color:var(--unknown); }
+.chart-empty { font-size:12px; margin:0; }
 `;
 
 function layout(title: string, body: string, refreshSeconds?: number): string {
@@ -199,7 +213,7 @@ ${incidentRows}</table></div>`,
 }
 
 export function comingSoonPage(
-  active: 'infra' | 'business',
+  active: 'business',
   title: string,
   phase: string,
 ): string {
@@ -311,4 +325,13 @@ ${select('environment', 'All environments', sources.environments, filters.enviro
 ${body}</table></div>${pager}`,
     ),
   );
+}
+
+/** A logged-in page: header, nav and body. */
+export function page(
+  title: string,
+  active: 'status' | 'logs' | 'infra' | 'business',
+  body: string,
+): string {
+  return layout(title, shell(active, body));
 }

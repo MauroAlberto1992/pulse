@@ -105,13 +105,6 @@ export class StatusController {
     return statusPage(targets, incidents, now);
   }
 
-  @Get('infra')
-  @UseGuards(AuthGuard)
-  @Header('Content-Type', 'text/html; charset=utf-8')
-  infra(): string {
-    return comingSoonPage('infra', 'Infra', 'phase 3');
-  }
-
   @Get('business')
   @UseGuards(AuthGuard)
   @Header('Content-Type', 'text/html; charset=utf-8')

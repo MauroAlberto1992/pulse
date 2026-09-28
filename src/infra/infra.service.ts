@@ -2,11 +2,16 @@ import { Inject, Injectable } from '@nestjs/common';
 import { CONFIG, Config } from '../config';
 import { RailwayReader, VercelReader } from './readonly-clients';
 
+// Railway's smallest sample rate is 30 s. Short ranges also get a shorter cache, or a 5-minute
+// view would lag by 2 minutes.
 export const INFRA_RANGES = {
-  '1h': { ms: 3_600_000, sampleSeconds: 60 },
-  '6h': { ms: 6 * 3_600_000, sampleSeconds: 300 },
-  '24h': { ms: 86_400_000, sampleSeconds: 900 },
-  '7d': { ms: 7 * 86_400_000, sampleSeconds: 3600 },
+  '5m': { ms: 5 * 60_000, sampleSeconds: 30, cacheMs: 30_000 },
+  '15m': { ms: 15 * 60_000, sampleSeconds: 30, cacheMs: 30_000 },
+  '30m': { ms: 30 * 60_000, sampleSeconds: 60, cacheMs: 30_000 },
+  '1h': { ms: 3_600_000, sampleSeconds: 60, cacheMs: 120_000 },
+  '6h': { ms: 6 * 3_600_000, sampleSeconds: 300, cacheMs: 120_000 },
+  '24h': { ms: 86_400_000, sampleSeconds: 900, cacheMs: 120_000 },
+  '7d': { ms: 7 * 86_400_000, sampleSeconds: 3600, cacheMs: 120_000 },
 } as const;
 export type InfraRange = keyof typeof INFRA_RANGES;
 
@@ -59,13 +64,12 @@ interface ProjectsQuery {
   };
 }
 
-const CACHE_MS = 120_000;
 // 4 services × 4 measurements = 16 metric queries per request, under Railway's 19.
 const SERVICES_PER_REQUEST = 4;
 
 /**
  * Reads infra data from Railway and Vercel through the read-only clients. Nothing is stored:
- * both platforms keep the history. Results are cached for 2 minutes per range, and Railway is
+ * both platforms keep the history. Results are cached per range (30 s to 2 min), and Railway is
  * read in a few batched GraphQL requests (aliases), one at a time, to stay inside its limits.
  */
 @Injectable()
@@ -87,7 +91,7 @@ export class InfraService {
     const cached = this.cache.get(range);
     if (
       cached !== undefined &&
-      now.getTime() - cached.fetchedAt.getTime() < CACHE_MS
+      now.getTime() - cached.fetchedAt.getTime() < INFRA_RANGES[range].cacheMs
     ) {
       return cached;
     }
@@ -196,11 +200,13 @@ export class InfraService {
           const series = Object.fromEntries(
             MEASUREMENTS.map(m => [m, [] as Series]),
           ) as Record<Measurement, Series>;
-          // The newest bucket is still filling up and reads as a drop to ~0: leave it out.
-          const complete = now.getTime() / 1000 - sampleSeconds;
+          // The first and last buckets are partial (the first starts before the range, the last
+          // is still filling up) and read as a drop to ~0: keep only whole buckets.
+          const firstWhole = (now.getTime() - ms) / 1000;
+          const lastWhole = now.getTime() / 1000 - sampleSeconds;
           for (const metric of metrics) {
             series[metric.measurement] = metric.values.filter(
-              point => point.ts <= complete,
+              point => point.ts >= firstWhole && point.ts <= lastWhole,
             );
           }
           const deploy = deploys?.edges[0]?.node;

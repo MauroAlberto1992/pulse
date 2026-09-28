@@ -95,3 +95,29 @@ describe('infraPage', () => {
     expect(html).toContain('Vercel: Vercel API: Forbidden');
   });
 });
+
+describe('infra ranges', () => {
+  it('offers 5m to 7d, and every sample rate is one Railway accepts (30 s or more)', () => {
+    const { INFRA_RANGES } = jest.requireActual('./infra.service');
+    expect(Object.keys(INFRA_RANGES)).toEqual([
+      '5m',
+      '15m',
+      '30m',
+      '1h',
+      '6h',
+      '24h',
+      '7d',
+    ]);
+    for (const range of Object.values(INFRA_RANGES) as Array<{
+      sampleSeconds: number;
+    }>) {
+      expect(range.sampleSeconds).toBeGreaterThanOrEqual(30);
+    }
+    const html = infraPage(
+      { fetchedAt: new Date(0), railway: [], vercel: [] },
+      '15m',
+    );
+    expect(html).toContain('href="/infra?range=5m"');
+    expect(html).toContain('href="/infra?range=15m" class="active"');
+  });
+});

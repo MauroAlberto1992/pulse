@@ -24,6 +24,9 @@ export interface Config {
   /** Bearer secret the apps' log shippers send; null disables /ingest/logs. */
   logIngestSecret: string | null;
   logRetentionDays: number;
+  /** Phase 3: read-only use only (src/infra/readonly-clients.ts). null hides that part. */
+  railwayApiToken: string | null;
+  vercelToken: string | null;
 }
 
 /** Validates the environment once at startup; throws naming every problem (never the values). */
@@ -102,6 +105,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     heartbeatUrl: optional('HEARTBEAT_URL'),
     logIngestSecret,
     logRetentionDays: positiveInt('LOG_RETENTION_DAYS', 30),
+    railwayApiToken: optional('RAILWAY_API_TOKEN'),
+    vercelToken: optional('VERCEL_TOKEN'),
   };
 
   if (problems.length !== 0) {

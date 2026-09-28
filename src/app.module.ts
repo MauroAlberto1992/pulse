@@ -3,6 +3,8 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { AuthController } from './auth/auth.controller';
 import { AuthGuard } from './auth/auth.guard';
 import { CONFIG, loadConfig } from './config';
+import { BusinessController } from './business/business.controller';
+import { BusinessService } from './business/business.service';
 import { InfraController } from './infra/infra.controller';
 import { InfraService } from './infra/infra.service';
 import { LogsController } from './logs/logs.controller';
@@ -19,6 +21,7 @@ import { StatusController } from './status/status.controller';
     StatusController,
     LogsController,
     InfraController,
+    BusinessController,
   ],
   providers: [
     { provide: CONFIG, useFactory: () => loadConfig() },
@@ -27,6 +30,7 @@ import { StatusController } from './status/status.controller';
     MonitorService,
     LogsService,
     InfraService,
+    BusinessService,
     AuthGuard,
   ],
 })

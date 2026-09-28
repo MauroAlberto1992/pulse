@@ -27,6 +27,9 @@ export interface Config {
   /** Phase 3: read-only use only (src/infra/readonly-clients.ts). null hides that part. */
   railwayApiToken: string | null;
   vercelToken: string | null;
+  /** Phase 4: api_cp's GET /api/metrics/business and its secret. null hides the Business page data. */
+  businessMetricsUrl: string | null;
+  metricsSecret: string | null;
 }
 
 /** Validates the environment once at startup; throws naming every problem (never the values). */
@@ -77,6 +80,15 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     problems.push('LOG_INGEST_SECRET must be at least 32 characters');
   }
 
+  if (
+    (optional('BUSINESS_METRICS_URL') === null) !==
+    (optional('METRICS_SECRET') === null)
+  ) {
+    problems.push(
+      'set both BUSINESS_METRICS_URL and METRICS_SECRET, or neither',
+    );
+  }
+
   const alertFrom = optional('ALERT_EMAIL_FROM');
   const alertTo = optional('ALERT_EMAIL_TO');
   const brevoApiKey = optional('BREVO_API_KEY');
@@ -107,6 +119,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     logRetentionDays: positiveInt('LOG_RETENTION_DAYS', 30),
     railwayApiToken: optional('RAILWAY_API_TOKEN'),
     vercelToken: optional('VERCEL_TOKEN'),
+    businessMetricsUrl: optional('BUSINESS_METRICS_URL'),
+    metricsSecret: optional('METRICS_SECRET'),
   };
 
   if (problems.length !== 0) {

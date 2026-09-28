@@ -122,6 +122,11 @@ h3.env { font-size:14px; text-transform:uppercase; letter-spacing:.04em; color:v
 .summary-warn { border-color:var(--unknown); } .summary-problem { border-color:var(--down); }
 .rules { margin:0 0 8px; } .rules summary { cursor:pointer; color:var(--muted); font-size:13px; }
 .rules .panel { margin-top:8px; }
+.kpis { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:12px; margin:12px 0; }
+.kpi { padding:12px 14px; } .kpi .value { font-size:24px; font-weight:600; margin:2px 0 0; }
+.kpi .label { font-size:12px; color:var(--muted); margin:0; } .kpi .sub { font-size:12px; color:var(--muted); margin:2px 0 0; }
+.bars rect { fill:var(--up); } .bars rect.bad { fill:var(--down); } .bars rect:hover { opacity:.75; }
+.axis { font-size:11px; color:var(--muted); display:flex; justify-content:space-between; margin-top:2px; }
 `;
 
 function layout(title: string, body: string, refreshSeconds?: number): string {
@@ -226,20 +231,6 @@ ${rows}</table></div>
 ${incidentRows}</table></div>`,
     ),
     60,
-  );
-}
-
-export function comingSoonPage(
-  active: 'business',
-  title: string,
-  phase: string,
-): string {
-  return layout(
-    `Pulse ${title.toLowerCase()}`,
-    shell(
-      active,
-      `<h2>${escapeHtml(title)}</h2><p class="muted">Coming soon (${escapeHtml(phase)}).</p>`,
-    ),
   );
 }
 
@@ -351,4 +342,9 @@ export function page(
   body: string,
 ): string {
   return layout(title, shell(active, body));
+}
+
+/** ⓘ with a CSS-only tooltip: hover on desktop, tap (focus) on mobile. */
+export function tip(text: string): string {
+  return `<span class="tip" tabindex="0" role="note" aria-label="${escapeHtml(text)}">ⓘ<span class="tip-text" aria-hidden="true">${escapeHtml(text)}</span></span>`;
 }

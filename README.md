@@ -1,8 +1,8 @@
 # Pulse
 
 Uptime monitoring and alerting for Espion, served at `pulse.espion.pt`. Single user.
-Plan: `api_cp/docs/PULSE_OBSERVABILITY_PLAN.md`. Phase 1 (uptime + alerts), Phase 2 (logs) and
-Phase 3 (infra).
+Plan: `api_cp/docs/PULSE_OBSERVABILITY_PLAN.md`. Phases 1 (uptime + alerts), 2 (logs), 3 (infra)
+and 4 (business).
 
 ## What it does
 
@@ -25,7 +25,12 @@ Phase 3 (infra).
   - ⛔ **Read-only, always.** These tokens have full access, so every call goes through
     `src/infra/readonly-clients.ts`, which refuses GraphQL mutations and anything but GET on an
     allow-list, with tests. Never use them to delete or change anything on Railway or Vercel.
-- Dashboard: server-rendered Status, Logs and Infra pages, plus an empty Business placeholder.
+- Business: practitioners, patients, consultations, Moloni invoices and referrals, as totals and
+  per month / per week, plus a table per practitioner type. Read from api_cp's
+  `GET /api/metrics/business` (`BUSINESS_METRICS_URL`, header `x-metrics-secret` =
+  `METRICS_SECRET`), which returns counts and sums only. Pulse never touches the clinical
+  databases or the encryption key. Cached 10 minutes.
+- Dashboard: server-rendered Status, Logs, Infra and Business pages.
 - Login: its own password (+ optional TOTP), no dependency on `api_cp`. Five failed attempts lock
   the login for 15 minutes. Sessions last 7 days; rotate `SESSION_SECRET` to revoke them.
 

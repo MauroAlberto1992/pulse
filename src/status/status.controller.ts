@@ -11,7 +11,7 @@ import { join } from 'path';
 import { AuthGuard } from '../auth/auth.guard';
 import { CONFIG, Config } from '../config';
 import { PrismaService } from '../prisma.service';
-import { comingSoonPage, statusPage, TargetStatus } from './views';
+import { statusPage, TargetStatus } from './views';
 
 const DAY_MS = 86_400_000;
 // Read once at startup; Railway runs from the repo root, where public/ lives.
@@ -103,12 +103,5 @@ export class StatusController {
     );
 
     return statusPage(targets, incidents, now);
-  }
-
-  @Get('business')
-  @UseGuards(AuthGuard)
-  @Header('Content-Type', 'text/html; charset=utf-8')
-  business(): string {
-    return comingSoonPage('business', 'Business', 'phase 4');
   }
 }

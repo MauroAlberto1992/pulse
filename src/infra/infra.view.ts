@@ -1,4 +1,4 @@
-import { escapeHtml, formatDate, page } from '../status/views';
+import { escapeHtml, formatDate, page, tip } from '../status/views';
 import { lineChart } from './charts';
 import {
   evaluate,
@@ -43,11 +43,6 @@ const TIPS = {
   vercel:
     'Latest web deployments. READY is live (production) or a working preview. ERROR means the build failed; production keeps serving the previous version.',
 };
-
-/** ⓘ with a CSS-only tooltip: hover on desktop, tap (focus) on mobile. */
-function tip(text: string): string {
-  return `<span class="tip" tabindex="0" role="note" aria-label="${escapeHtml(text)}">ⓘ<span class="tip-text" aria-hidden="true">${escapeHtml(text)}</span></span>`;
-}
 
 const ICON: Record<Severity, string> = { ok: '✅', warn: '⚠️', problem: '❌' };
 
